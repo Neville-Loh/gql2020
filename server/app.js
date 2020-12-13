@@ -1,12 +1,12 @@
 const express = require('express');
 const graphqlHTTP = require('express-graphql');
-
+const schema = requlre('./schema/schema');
 
 const app = express();
 
 // middleware
 app.use('/graphql', graphqlHTTP({
-    
+    schema
 }));
 
 app.listen(4000,() => {

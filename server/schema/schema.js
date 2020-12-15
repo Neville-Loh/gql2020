@@ -5,14 +5,19 @@ const {
     GraphQLString,
     GraphQLSchema,
     GraphQLID,
-    GraphQLInt
+    GraphQLInt,
+    GraphQLList
 } = graphql;
 
 // dummy data
 var books = [
-    {name: 'Name of the Wind', genre: 'Fantasy' , id: '1'},
-    {name: 'The final Empire', genre: 'Fantasy' , id: '2'},
-    {name: 'The Long Earth', genre: 'Sci-Fi' , id: '3'}
+    {name: 'Biochemistory', genre: 'Chemistry' , id: '1', authorId: '1', standardId: ['1']},
+    {name: 'Greek History', genre: 'History' , id: '2', authorId: '2', standardId: ['7']},
+    {name: 'Cadiac System', genre: 'Biology' , id: '3', authorId: '3', standardId: ['2','5']},
+    {name: 'NCEA level 3 Mathematics', genre: 'Mathematics' , id: '4', standardId: '1', standardId: ['4','8']},
+    {name: 'Introduction to Biology', genre: 'Biology' , id: '5', authorId: '2', standardId: ['2','5']},
+    {name: 'Foundation of Clasical Physics', genre: 'Physics' , id: '6', authorId: '1', standardId: ['6']},
+    {name: 'Introduction to Physiology', genre: 'Biology' , id: '7', authorId: '2', standardId: ['12','5']}
 ];
 
 var authors = [
@@ -21,6 +26,17 @@ var authors = [
     { name: 'Terry Pratcheet', age: 66, id: '3'}
 ];
 
+var standards = [
+    {name:"AS Chemistry 7003", qualification: 'CIE', id:'1'},
+    {name:"AS Biology 7503", qualification: 'CIE', id:'2'},
+    {name:"IGCSE Physics 5003", qualification: 'CIE', id:'3'},
+    {name:"AS Maths 9100", qualification: 'CIE', id:'4'},
+    {name:"NCEA level 2, Biology 5244", qualification: 'NCEA', id:'5'},
+    {name:"NCEA level 2, Physics 5244", qualification: 'NCEA', id:'6'},
+    {name:"NCEA level 1, History 5244", qualification: 'NCEA', id:'7'},
+    {name:"NCEA level 3, Calculus 5244", qualification: 'NCEA', id:'8'}
+]
+
 
 // Schema setup
 const BookType = new GraphQLObjectType({
@@ -28,7 +44,23 @@ const BookType = new GraphQLObjectType({
     fields: () => ({
         id: { type: GraphQLID },
         name: { type: GraphQLString },
-        genre: { type: GraphQLString }
+        genre: { type: GraphQLString },
+        author: {
+            type: AuthorType,
+            resolve(parent, args){
+                return _.find(authors, {id: parent.authorId})
+            }
+        },
+        standard: {
+            type: new GraphQLList(StandardType),
+            resolve(parent, args){
+                const criteria = parent.standardId
+                const filtered = standards.filter((obj) => {
+                    return criteria.indexOf(obj.id) >= 0;
+                   });
+                return filtered
+            }
+        }
     })
 })
 
@@ -37,7 +69,34 @@ const AuthorType = new GraphQLObjectType({
     fields: () => ({
         id: { type: GraphQLID },
         name: { type: GraphQLString },
-        age: { type: GraphQLInt }
+        age: { type: GraphQLInt },
+        books: {
+            type: new GraphQLList(BookType),
+            resolve(parent, args){
+                return _.filter(books, { authorId: parent.id});
+            }
+        }
+    })
+})
+
+const StandardType = new GraphQLObjectType({
+    name: 'Standard',
+    fields: () => ({
+        id: { type: GraphQLID },
+        name: { type: GraphQLString },
+        qualification: { type: GraphQLString },
+        books: {
+            type: new GraphQLList(BookType),
+            resolve(parent, args){
+                // return _.filter(books, book.standardId.includes(parent.id));
+                // return _.map(books, book => {
+                //     book.standardId = _.filter(books, book.standardId.includes(parent.id));
+                //     return book;
+                // });
+
+                return books.filter(book => book.standardId.includes(parent.id))
+            }
+        }
     })
 })
 
@@ -57,9 +116,34 @@ const RootQuery = new GraphQLObjectType({
             type: AuthorType,
             args: {id:{type: GraphQLID}},
             resolve(parent,args){
-                return _.find(authors, {id: args.id})
+                return _.find(authors, {id: args.id});
             }
-        }
+        },
+        standard: {
+            type: StandardType,
+            args: {id:{type: GraphQLID}},
+            resolve(parent,args){
+                return _.find(standards, {id: args.id});
+            }
+        },
+        books:{
+            type: new GraphQLList(BookType),
+            resolve(parent,args){
+                return books;
+            }
+        },
+        authors:{
+            type: new GraphQLList(AuthorType),
+            resolve(parent,args){
+                return authors;
+            }
+        },
+        standards: {
+            type: new GraphQLList(StandardType),
+            resolve(parent,args){
+                return standards;
+            }
+        },
     }
 })
 

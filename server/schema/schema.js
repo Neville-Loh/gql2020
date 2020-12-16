@@ -27,7 +27,7 @@ var authors = [
 ];
 
 var standards = [
-    {name:"AS Chemistry 7003", qualification: 'CIE', id:'1'},
+    {name:"AS Chemistry 7003", qualification: 'CIE', id:'1', equivelentStandardId:[]},
     {name:"AS Biology 7503", qualification: 'CIE', id:'2'},
     {name:"IGCSE Physics 5003", qualification: 'CIE', id:'3'},
     {name:"AS Maths 9100", qualification: 'CIE', id:'4'},
